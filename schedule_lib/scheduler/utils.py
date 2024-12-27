@@ -4,14 +4,14 @@ def sort_tasks_by_priority(tasks):
     return sorted(tasks, key=lambda x: x.priority)
 
 def hp_i_of_tasks(task_i, tasks):
-    tasks = sort_tasks_by_priority(tasks)
-    hpi_index = tasks.index(task_i)
-    return tasks[:hpi_index]
+    sorted_tasks = sort_tasks_by_priority(list(tasks))
+    hpi_index = sorted_tasks.index(task_i)
+    return sorted_tasks[:hpi_index]
 
 def lp_i_of_tasks(task_i, tasks):
-    tasks = sort_tasks_by_priority(tasks)
-    lpi_index = tasks.index(task_i)
-    return tasks[lpi_index+1:]
+    sorted_tasks = sort_tasks_by_priority(list(tasks))
+    lpi_index = sorted_tasks.index(task_i)
+    return sorted_tasks[lpi_index+1:]
 
 def worst_case_response_time(task_i, tasks):
     hp_i = hp_i_of_tasks(task_i, tasks)

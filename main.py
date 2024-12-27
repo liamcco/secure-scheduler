@@ -1,6 +1,6 @@
 import schedule_lib
 
-scheduler = schedule_lib.Scheduler(schedule_lib.Processor(1))
+scheduler = schedule_lib.Scheduler()
 
 task1 = schedule_lib.Task(3, 3, 1)
 task2 = schedule_lib.Task(5, 5, 1)

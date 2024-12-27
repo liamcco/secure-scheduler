@@ -3,56 +3,45 @@ from schedule_lib.scheduler.utils import worst_case_maximum_inversion_budget, mi
 
 
 class Scheduler:
-    def __init__(self, processor):
-        self.processor = processor
-        self.tasks = []
+    def __init__(self):
+        self.tasks = set()
+        self.ready_queue = None
         self.time = 0
     
-    def shuffleTasks(self):
-        for core in self.processor.cores:
-            core.ready_queue.sort(key=lambda x: x.priority)
-            # Step 1: Finding candidates
-            temp_queue = []
-            if len(core.ready_queue) <= 1:
-                continue
+    def scheduleTasks(self):
+        ready_tasks = sorted([task for task in self.tasks if task.remaining_execution_time > 0], key=lambda x: x.priority)
+        
+        if len(ready_tasks) == 0:
+            return
+        
+        self.ready_queue = ready_tasks[0]
+        
+        if len(ready_tasks) == 1:
+            return
+        
+        if worst_case_maximum_inversion_budget(self.ready_queue, self.tasks) <= 0:
+            return
+        
+        # Step 1: Find the set of tasks that can be selected
+        temp_queue = []
+        temp_queue.append(ready_tasks[0])
+        m1 = minimum_inversion_priority(temp_queue[0], self.tasks)
             
-            if worst_case_maximum_inversion_budget(core.ready_queue[0], self.tasks) <= 0:
-                continue
+        for task in ready_tasks[1:]:
+            if m1 > task.priority:
+                temp_queue.append(task)
+            if worst_case_maximum_inversion_budget(task, self.tasks) <= 0:
+                break
             
-            temp_queue.append(core.ready_queue[0])
-            m1 = minimum_inversion_priority(core.ready_queue[0], self.tasks)
-            
-            for task in core.ready_queue[1:]:
-                if m1 > task.priority:
-                    temp_queue.append(task)
-                if worst_case_maximum_inversion_budget(task, self.tasks) <= 0:
-                    break
-            
-            # Step 2: Random selection
-            selected_task = random.choice(temp_queue)
-            selected_task_index = core.ready_queue.index(selected_task)
-            core.ready_queue.insert(0, core.ready_queue.pop(selected_task_index))
-
-    def add_to_ready_queue(self, task):
-        if task not in self.processor.cores[task.core_id].ready_queue:
-            self.processor.cores[task.core_id].ready_queue.append(task)
-
-    def remove_from_ready_queue(self, task):
-        if task in self.processor.cores[task.core_id].ready_queue:
-            self.processor.cores[task.core_id].ready_queue.remove(task)
+        # Step 2: Random selection
+        self.ready_queue = random.choice(temp_queue)
 
     def add_task(self, task):
-        self.tasks.append(task)
-        task.scheduler = self
-        task.id = len(self.tasks)
-
-    def assign_tasks_to_cores(self):
-        for task in self.tasks:
-            task.core_id = 0
+        self.tasks.add(task)
         
     def prioritize_tasks(self):
-        self.tasks.sort(key=lambda x: x.period)
-        for i, task in enumerate(self.tasks):
+        sorted_tasks = sorted(self.tasks, key=lambda x: x.period)
+        for i, task in enumerate(sorted_tasks):
             task.priority = i
     
     def reset_tasks(self):
@@ -62,17 +51,16 @@ class Scheduler:
     def run(self, time):
 
         self.prioritize_tasks()
-        self.assign_tasks_to_cores()
         self.reset_tasks()
-
-        for task in self.tasks:
-            self.add_to_ready_queue(task)
 
         for _ in range(time):
 
-            self.shuffleTasks()
+            self.ready_queue = None
 
-            self.processor.execute()
+            self.scheduleTasks()
+
+            if self.ready_queue:
+                self.ready_queue.execute()
     
             for task in self.tasks:
                 try:
