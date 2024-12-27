@@ -6,8 +6,11 @@ class IdleTask(Task):
     """
     def __init__(self):
         super().__init__(float("inf"), float("inf"), float("inf"))
+        self.periority = 0
+        self.id = 0
     
     def execute(self):
+        #print("Idle task executing") 
         pass
     
     def reset(self):

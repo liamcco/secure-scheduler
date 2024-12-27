@@ -19,7 +19,6 @@ class Task:
             raise ValueError("Task already complete")
         
         self.remaining_execution_time -= 1
-        print(f"Task {self.id} executing")
 
         if self.remaining_execution_time == 0:
             self.scheduler.remove_from_ready_queue(self)
@@ -38,7 +37,7 @@ class Task:
 
         # If task is not complete and deadline is missed, raise error
         if self.remaining_deadline == 0:
-            raise ValueError("Task missed deadline")
+            raise ValueError(f"Task {self.id} missed deadline")
 
         # Always decrement time until next period
         self.time_until_next_period -= 1
