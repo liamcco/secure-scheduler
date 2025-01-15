@@ -1,12 +1,13 @@
 import math
+import random
 
 def sort_tasks_by_priority(tasks):
     return sorted(tasks, key=lambda x: x.priority)
 
 def hp_i_of_tasks(task_i, tasks):
     sorted_tasks = sort_tasks_by_priority(list(tasks))
-    hpi_index = sorted_tasks.index(task_i)
-    return sorted_tasks[:hpi_index]
+    hp_i = [task for task in sorted_tasks if task.priority < task_i.priority]
+    return hp_i
 
 def lp_i_of_tasks(task_i, tasks):
     sorted_tasks = sort_tasks_by_priority(list(tasks))
@@ -35,10 +36,12 @@ def minimum_inversion_priority(task_i, tasks):
     lp_i = lp_i_of_tasks(task_i, tasks)
     considered_tasks = [task for task in lp_i if worst_case_maximum_inversion_budget(task, tasks) < 0]
     if len(considered_tasks) == 0:
-        return len(tasks)
+        return len(tasks)+1
     else:
         return min([task.priority for task in considered_tasks])
-    
-def next_schedule_decision_to_be_made(task_i, ready_queue):
-    hp_i = hp_i_of_tasks(task_i, ready_queue)
-    return min([worst_case_maximum_inversion_budget(task, hp_i) for task in hp_i])
+
+def next_schedule_decision_to_be_made(task_s, ready_tasks):
+    hp_s = hp_i_of_tasks(task_s, ready_tasks)
+    max = min([task.remaining_inversion_budget for task in hp_s])
+    new_max = min(max, task_s.remaining_execution_time)
+    return random.randint(1, new_max)
