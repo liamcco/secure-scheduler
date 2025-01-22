@@ -1,18 +1,13 @@
 import math
 import random
 
-def sort_tasks_by_priority(tasks):
-    return sorted(tasks, key=lambda x: x.priority)
-
 def hp_i_of_tasks(task_i, tasks):
-    sorted_tasks = sort_tasks_by_priority(list(tasks))
-    hp_i = [task for task in sorted_tasks if task.priority < task_i.priority]
+    hp_i = [task for task in tasks if task.priority < task_i.priority]
     return hp_i
 
 def lp_i_of_tasks(task_i, tasks):
-    sorted_tasks = sort_tasks_by_priority(list(tasks))
-    lpi_index = sorted_tasks.index(task_i)
-    return sorted_tasks[lpi_index+1:]
+    lp_i = [task for task in tasks if task.priority > task_i.priority]
+    return lp_i
 
 def worst_case_response_time(task_i, tasks):
     hp_i = hp_i_of_tasks(task_i, tasks)
@@ -36,12 +31,18 @@ def minimum_inversion_priority(task_i, tasks):
     lp_i = lp_i_of_tasks(task_i, tasks)
     considered_tasks = [task for task in lp_i if worst_case_maximum_inversion_budget(task, tasks) < 0]
     if len(considered_tasks) == 0:
-        return len(tasks)+1
+        return math.inf
     else:
         return min([task.priority for task in considered_tasks])
 
 def next_schedule_decision_to_be_made(task_s, ready_tasks):
     hp_s = hp_i_of_tasks(task_s, ready_tasks)
     max = min([task.remaining_inversion_budget for task in hp_s])
-    new_max = min(max, task_s.remaining_execution_time)
-    return random.randint(1, new_max)
+    return random.randint(1, max)
+
+def calculate_hyperperiod(tasks):
+    periods = [task.period for task in tasks]
+    hyperPeriod = 1
+    for period in periods:
+        hyperPeriod *= period//math.gcd(period, hyperPeriod)
+    return hyperPeriod

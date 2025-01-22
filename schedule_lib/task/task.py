@@ -5,41 +5,40 @@ class Task:
         self.period = period
         self.deadline = deadline
         self.duration = duration
+        self.reset()
 
-    def execute(self):
+    def execute(self, callback):
         if self.remaining_execution_time == 0:
             raise ValueError("Task already complete")
         
         self.remaining_execution_time -= 1
-        return self.remaining_execution_time == 0
+
+        if self.remaining_execution_time == 0:
+            callback(self)
 
     def reset(self):
         self.remaining_execution_time = self.duration
         self.remaining_deadline = self.deadline
         self.time_until_next_period = self.period
-
-        self.remaining_inversion_budget = self.maximum_inversion_budget
     
-    def time_step(self):
-        # Only decrement time until deadline if task is not complete
-        if self.remaining_execution_time > 0 and self.remaining_deadline > 0:
+    def time_step(self, new_task_period):
+        if self.remaining_execution_time > 0:
             self.remaining_deadline -= 1
 
-        # If task is not complete and deadline is missed, raise error
-        if self.remaining_execution_time > 0 and self.remaining_deadline == 0:
+        if self.remaining_deadline == 0:
             raise ValueError(f"{self} missed deadline")
-
+            
         # Always decrement time until next period
         self.time_until_next_period -= 1
 
         # If time until next period is 0, reset task
         if self.time_until_next_period == 0:
             self.reset()
-            return True
+            new_task_period(self)
     
     def __str__(self):
         if self.priority is None:
-            return "Task unknown"
+            return "Task ?"
         else:
             return f"Task {self.priority}"
         
@@ -51,15 +50,6 @@ class IdleTask(Task):
         self.remaining_execution_time = math.inf
         self.remaining_deadline = math.inf
         self.time_until_next_period = math.inf
-
-    def execute(self):
-        pass
-
-    def time_step(self):
-        pass
-
-    def reset(self):
-        pass
 
     def __str__(self):
         return "Idle task"
