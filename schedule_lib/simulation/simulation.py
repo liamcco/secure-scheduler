@@ -22,6 +22,7 @@ class Simulation:
             # Execute the task
             taskToExecute.execute(self.scheduler.whenTaskComplete)
 
+            # Statistics
             self.simulation[t % hyperPeriod][taskToExecute.id] += 1
 
             # Increment time step

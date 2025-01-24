@@ -11,6 +11,7 @@ class Scheduler:
         self.prioritize_tasks(tasks)
         self.toSchedule = 0
         
+    # Sort tasks by PERIOD and assign priority
     def prioritize_tasks(self, tasks):
         self.tasks = sorted(tasks, key=lambda x: x.period)
         
@@ -18,10 +19,12 @@ class Scheduler:
             task.priority = i
             task.id = task.priority
         
+        # Only when tasks have been prioritized, we can calculate the maximum inversion budget
         for task in self.tasks:
             task.maximum_inversion_budget = worst_case_maximum_inversion_budget(task, self.tasks)
             task.remaining_inversion_budget = task.maximum_inversion_budget
         
+        # Add idle task
         Scheduler.idle_task.priority = math.inf
         Scheduler.idle_task.id = len(self.tasks)
         Scheduler.idle_task.maximum_inversion_budget = math.inf
@@ -33,20 +36,23 @@ class Scheduler:
         if self.toSchedule == 0:
             self.previous_task = self.pickTask()
 
+        # Decrement task budget after we now wich task is going to be executed
         self.decrement_task_budgets()
         self.toSchedule -= 1
         
         return self.previous_task
     
+    # Implemets TaskShuffler
     def pickTask(self):
+        # Tasks ready for execution
         ready_tasks = [task for task in self.tasks if task.remaining_execution_time > 0]
 
-        # If there are no tasks ready, keep idling
+        # If there are no tasks ready, keep idling, indefinetly 
         if len(ready_tasks) == 0:
             self.toSchedule = math.inf
             return Scheduler.idle_task
         
-        # If there is only one task, select it
+        # Select the first task
         selection = ready_tasks[0]
         
         # Can we afford to select any other task?
@@ -55,9 +61,9 @@ class Scheduler:
             return selection
         
         # Step 1: Find the set of tasks that can be selected
-        ready_tasks.append(Scheduler.idle_task)
-        temp_queue = [ready_tasks[0]]
-        m1 = minimum_inversion_priority(temp_queue[0], self.tasks)
+        ready_tasks.append(Scheduler.idle_task) # Treat idle task as a task
+        temp_queue = [ready_tasks[0]] # First task is always considered
+        m1 = minimum_inversion_priority(temp_queue[0], self.tasks) # Minimum inversion priority
             
         for task in ready_tasks[1:]:
             if task.priority <= m1:
@@ -71,7 +77,7 @@ class Scheduler:
 
         # Step 3: if lower priority task is selected, schedule decision
         if idx == 0:
-            self.toSchedule = selection.remaining_execution_time
+            self.toSchedule = selection.remaining_execution_time # ? Why don't we potentially idle?
         else:
             self.toSchedule = next_schedule_decision_to_be_made(selection, ready_tasks)
         
