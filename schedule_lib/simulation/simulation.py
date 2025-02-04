@@ -16,6 +16,7 @@ class Simulation:
             self.simulation[slot] = taskCounter
         
         for t in range(time):
+
             # Pick a task to execute
             taskToExecute = self.scheduler.scheduleTasks()
             
@@ -28,3 +29,6 @@ class Simulation:
             # Increment time step
             self.scheduler.increment_time_step()
             
+            # if event = min( completion(execex of current task) and min(floor(t/T_i)*T_i+T_i)-t)
+            # RelSet= sort (all release time of all tasks)
+

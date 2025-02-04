@@ -10,7 +10,7 @@ class Scheduler:
     def __init__(self, tasks=[]):
         self.prioritize_tasks(tasks)
         self.toSchedule = 0
-        
+
     # Sort tasks by PERIOD and assign priority
     def prioritize_tasks(self, tasks):
         self.tasks = sorted(tasks, key=lambda x: x.period)
@@ -77,7 +77,8 @@ class Scheduler:
 
         # Step 3: if lower priority task is selected, schedule decision
         if idx == 0:
-            self.toSchedule = selection.remaining_execution_time # ? Why don't we potentially idle?
+            self.schedule = random.randint(1, selection.remaining_execution_time)
+            #self.toSchedule = selection.remaining_execution_time # ? Why don't we potentially idle?
         else:
             self.toSchedule = next_schedule_decision_to_be_made(selection, ready_tasks)
         
@@ -95,6 +96,8 @@ class Scheduler:
     def new_task_period(self, task):
         self.toSchedule = 0
         task.remaining_inversion_budget = task.maximum_inversion_budget
+        if task.jitter_left > 0:
+            task.remaining_inversion_budget -= task.jitter_left
     
     def whenTaskComplete(self, task):
         self.toSchedule = 0

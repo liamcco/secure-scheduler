@@ -1,38 +1,67 @@
+from schedule_lib.task.taskset import TaskSet
 import schedule_lib
 import schedule_lib.scheduler
 import schedule_lib.scheduler.utils
 
-task1 = schedule_lib.Task(5, 5, 1)
-task2 = schedule_lib.Task(8, 8, 2)
-task3 = schedule_lib.Task(20, 20, 3)
+def perform_response_time_test(taskset):
+    # prioritze taskset
+    tasks = sorted(taskset, key=lambda x: x.period)
 
-tasks = [task1, task2, task3]
+    for i, task in enumerate(taskset):
+        task.priority = i
 
-scheduler = schedule_lib.Scheduler(tasks)
+    # calculate responsetime for all tasks and compare to deadline
+    for task in tasks:
+        try:
+            schedule_lib.scheduler.utils.worst_case_response_time(task, tasks)
+        except:
+            #print("TEST FAILED")
+            return False
 
-simulation = schedule_lib.Simulation(scheduler)
+    #print("TEST SUCCESS")
+    return True
 
-simulation.run(400_000)
+def debug_taskset(taskset):
+    print("_"*30)
+    print()
+    print("{")
+    for task in taskset:
+        print(f"-\tPeriod: {task.period}\t Execution Time: {task.duration}")
+    
+    print("}")
+    print()
+    perform_response_time_test(taskset)
 
-analysis = schedule_lib.Analysis()
-data = simulation.simulation
-hyperPeriod = len(data)
-totalEntropy = analysis.computeScheduleEntropy(data)
+def simulate(taskset):
+    scheduler = schedule_lib.Scheduler(taskset)
 
-print("Slot\tPr0\tPr1\tPr2\tPr3\tTotalEntropy")
+    simulation = schedule_lib.Simulation(scheduler)
 
-for slot in range(16):
-    print(f"{slot}: ", end="\t")
-    slotData = data[slot]
+    try:
+        simulation.run(3_000*1_00)
+    except:
+        debug_taskset(taskset)
+        return False
 
-    pdatas = sorted(analysis.getSlotProbabilities(slotData), key=lambda x: x[0])
+    analysis = schedule_lib.Analysis()
+    data = simulation.simulation
+    totalEntropy = analysis.computeScheduleEntropy(data)
 
-    for pdata in pdatas:
-        print(f"{pdata[1]:.2f} ", end="\t")
+    U = sum([task.duration/task.period for task in taskset])
+    n = len(taskset)
 
-    slotEntropy = analysis.computeSlotEntropy(slotData)
+    print(f"U = {U:.2f} ==> Entropy = {totalEntropy} (n = {n})")
 
-    print(f"{slotEntropy:.2f}")
+    return True
 
-print("..."*15)
-print(f"Total\t\t\t\t\t{totalEntropy/hyperPeriod:.2f} entropy/slot")
+for U in TaskSet.utilgroups[9:]:
+    for n in TaskSet.numOfTasks:
+        for j in range(5):
+            while True:
+                U_aim = U[0] + (U[1]-U[0])/2
+                taskset = TaskSet.generate_task_set(n, U_aim)
+                totalU = sum([task.duration/task.period for task in taskset])
+                if U[0] <= totalU <= U[1]:
+                    if totalU <= TaskSet.rm_util_bound(n) or perform_response_time_test(taskset):
+                        simulate(taskset)
+                        break

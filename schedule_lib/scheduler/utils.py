@@ -19,6 +19,10 @@ def worst_case_response_time(task_i, tasks):
     while True:
         wcrt = wcrt_guess
         wcrt_guess = task_i.duration + sum([math.ceil(wcrt/task.period)*task.duration for task in hp_i])
+
+        if (wcrt_guess>task_i.deadline):
+            raise ValueError
+        
         if wcrt_guess == wcrt:
             return wcrt
 
@@ -39,14 +43,16 @@ def minimum_inversion_priority(task_i, tasks):
     if len(considered_tasks) == 0:
         return math.inf # Arbitrarily low priority
     else:
-        return min([task.priority for task in considered_tasks])
+        return min([task.priority for task in considered_tasks]) #max priority
 
 # Determines when the next schedule decision should be made
 def next_schedule_decision_to_be_made(task_s, ready_tasks):
     hp_s = hp_i_of_tasks(task_s, ready_tasks)
-    # ? Doesn't take remaining execution time into account -> Sqews the random selection
     max = min([task.remaining_inversion_budget for task in hp_s])
-    return random.randint(1, max)
+    remaining = task_s.remaining_execution_time
+    new_max = min(max, remaining)
+
+    return random.randint(1, new_max)
 
 # Calculates the hyperperiod of tasks in `tasks`
 def calculate_hyperperiod(tasks):

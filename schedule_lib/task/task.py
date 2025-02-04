@@ -1,11 +1,14 @@
 import math
+import random
 
 class Task:
-    def __init__(self, period, deadline, duration):
+    def __init__(self, period, duration, deadline=None, add_jitter=False):
         self.period = period
-        self.deadline = deadline
         self.duration = duration
-        self.reset()
+        self.deadline = deadline if deadline else period
+        self.jitter = int(self.period * 0.1) if add_jitter else 0
+        self.jitter_left = -1
+        self.reset()        
 
     def execute(self, callback):
         if self.remaining_execution_time == 0:
@@ -17,16 +20,31 @@ class Task:
             callback(self)
 
     def reset(self):
-        self.remaining_execution_time = self.duration
         self.remaining_deadline = self.deadline
         self.time_until_next_period = self.period
+        self.remaining_execution_time = self.duration
+
+        if self.jitter == 0:
+            return
+        
+        self.jitter_left = random.randint(0, self.jitter)
+        if self.jitter_left > 0:
+            self.remaining_execution_time = 0
     
     def time_step(self, new_task_period):
-        if self.remaining_execution_time > 0:
+        if self.remaining_execution_time > 0 or self.jitter_left > 0:
             self.remaining_deadline -= 1
 
         if self.remaining_deadline == 0:
             raise ValueError(f"{self} missed deadline")
+        
+        if self.jitter_left > 0:
+            self.jitter_left -= 1
+
+        if self.jitter_left == 0:
+            self.remaining_execution_time = self.duration
+            self.jitter_left = -1
+        
             
         # Always decrement time until next period
         self.time_until_next_period -= 1
