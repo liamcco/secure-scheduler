@@ -1,7 +1,8 @@
 import random
-from schedule_lib.task.task import Task
+from schedule_lib.task.jittertask import JitterTask
 
 class TaskSet:
+    """A class to generate task sets."""
 
     hyperperiod = 3000
     numOfTasks = [5, 7, 9, 11, 13, 15]
@@ -16,7 +17,10 @@ class TaskSet:
         return sorted({d for i in range(1, int(n**0.5) + 1) if n % i == 0 for d in (i, n // i)})
 
     def u_uni_fast(n, U):
-        """Generates a set of n utilizations that sum to U using the UUniFast algorithm."""
+        """Generates a set of n utilizations that sum to U 
+        using the UUniFast algorithm.
+        """
+        
         sumU = U
         utils = []
         for i in range(n - 1):
@@ -26,14 +30,19 @@ class TaskSet:
         utils.append(sumU)  # Last task gets remaining utilization
         return utils
 
-    def generate_task_set(n, U, period_limit=3000, duration_range=(1, 50)):
-        """Generates a task set where execution times are randomly chosen, and periods are calculated."""
+    def generate_task_set(n, U=0.5, hyper_period=3000, duration_range=(1, 50), priority_policy="RM"):
+        """Generates a task set with a given:
+        - number of tasks, n
+        - total utilization, U
+        - hyper period, hyper_period (optional),
+        - range of execution time, duration_range (optional)
+        """
         
         # Generate task utilizations
         utils = TaskSet.u_uni_fast(n, U)
         
         # Get valid periods (must be a divisor of period_limit)
-        valid_periods = TaskSet.get_divisors(period_limit)
+        valid_periods = TaskSet.get_divisors(hyper_period)
         
         task_set = []
         
@@ -48,12 +57,9 @@ class TaskSet:
             period = min(valid_periods, key=lambda p: abs(p - period))
             valid_periods.remove(period)
             
-            task_set.append(Task(period,execution_time))
+            task_set.append(JitterTask(period,execution_time))
         
         return task_set
-
-
-
 
 
 

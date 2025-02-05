@@ -1,67 +1,55 @@
-from schedule_lib.task.taskset import TaskSet
-import schedule_lib
-import schedule_lib.scheduler
-import schedule_lib.scheduler.utils
+from schedule_lib.task.jittertask import JitterTask as Task
+from schedule_lib.processor.processor import Processor
+from schedule_lib.feasibility.tests import RTA
+from schedule_lib.scheduler.taskshufflerscheduler import TaskShufflerScheduler
+from schedule_lib.analysis.analyze import Analysis
+from schedule_lib.partition.algorithms import ff
 
-def perform_response_time_test(taskset):
-    # prioritze taskset
-    tasks = sorted(taskset, key=lambda x: x.period)
+task1 = Task(5, 1)
+task2 = Task(8, 2)
+task3 = Task(20, 3)
 
-    for i, task in enumerate(taskset):
-        task.priority = i
+tasks = [task1, task2, task3]
 
-    # calculate responsetime for all tasks and compare to deadline
-    for task in tasks:
-        try:
-            schedule_lib.scheduler.utils.worst_case_response_time(task, tasks)
-        except:
-            #print("TEST FAILED")
-            return False
+for i, task in enumerate(tasks):
+    task.id = i
 
-    #print("TEST SUCCESS")
-    return True
+if RTA(tasks, priority_policy="RM"): # Check if the taskset is feasible
+    print("Taskset is feasible")
+else:
+    print("WARNING: Taskset is not feasible")
 
-def debug_taskset(taskset):
-    print("_"*30)
-    print()
-    print("{")
-    for task in taskset:
-        print(f"-\tPeriod: {task.period}\t Execution Time: {task.duration}")
-    
-    print("}")
-    print()
-    perform_response_time_test(taskset)
+TaskShufflerScheduler.priority_policy = "RM" # Set the priority policy to RRM
 
-def simulate(taskset):
-    scheduler = schedule_lib.Scheduler(taskset)
+processor = Processor(1, scheduler=TaskShufflerScheduler) # 1 core
 
-    simulation = schedule_lib.Simulation(scheduler)
+def custom_partition_algorithm(tasks, m):
+    return ff(tasks, m, task_order="RM", test=RTA, priority_policy="RM")
 
-    try:
-        simulation.run(3_000*1_00)
-    except:
-        debug_taskset(taskset)
-        return False
+processor.load_tasks(tasks, partition_algorithm=custom_partition_algorithm) # Load tasks into the processor
 
-    analysis = schedule_lib.Analysis()
-    data = simulation.simulation
-    totalEntropy = analysis.computeScheduleEntropy(data)
+success = processor.run(400_000) # Run the processor for 100 time units
 
-    U = sum([task.duration/task.period for task in taskset])
-    n = len(taskset)
+if not success:
+    print("ABORTING: Deadline missed")
+    exit()
 
-    print(f"U = {U:.2f} ==> Entropy = {totalEntropy} (n = {n})")
+analysis = Analysis(processor.simulation[0])
+totalEntropy = analysis.computeScheduleEntropy()
 
-    return True
+print("Slot\tPr0\tPr1\tPr2\tPr3\tTotalEntropy")
 
-for U in TaskSet.utilgroups[9:]:
-    for n in TaskSet.numOfTasks:
-        for j in range(5):
-            while True:
-                U_aim = U[0] + (U[1]-U[0])/2
-                taskset = TaskSet.generate_task_set(n, U_aim)
-                totalU = sum([task.duration/task.period for task in taskset])
-                if U[0] <= totalU <= U[1]:
-                    if totalU <= TaskSet.rm_util_bound(n) or perform_response_time_test(taskset):
-                        simulate(taskset)
-                        break
+for slot in range(5):
+    print(f"{slot}: ", end="\t")
+    slotData = analysis.simulation[slot]
+    probabilities = analysis.getSlotProbabilities(slotData)
+
+    for p in probabilities:
+        print(f"{p:.2f} ", end="\t")
+
+    slotEntropy = analysis.computeSlotEntropy(slotData)
+
+    print(f"{slotEntropy:.2f}")
+
+print("..."*20)
+print(f"Total\t\t\t\t\t\t{totalEntropy/analysis.hyperPeriod:.2f} entropy/slot")
