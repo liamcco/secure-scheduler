@@ -1,8 +1,8 @@
-from schedule_lib.task.jittertask import JitterTask as Task
-from schedule_lib.processor.processor import Processor
+from schedule_lib import JitterTask as Task
+from schedule_lib import Processor
 from schedule_lib.feasibility.tests import RTA
-from schedule_lib.scheduler.taskshufflerscheduler import TaskShufflerScheduler
-from schedule_lib.analysis.analyze import Analysis
+from schedule_lib import TaskShufflerScheduler
+from schedule_lib import Analysis
 from schedule_lib.partition.algorithms import ff
 
 task1 = Task(5, 1)

@@ -1,17 +1,15 @@
 # schedule_lib/__init__.py
-from .scheduler.basicscheduler import Scheduler
-from .scheduler.taskshufflerscheduler import TaskShufflerScheduler
+from .scheduler import Scheduler
+from .scheduler import TaskShufflerScheduler
 
-from .processor.processor import Processor
+from .processor import Processor, Core
 
-from .task.basictask import Task
-from .task.jittertask import JitterTask
-from .task.idletask import IdleTask
+from .task import Task, JitterTask
 
-from .analysis.analyze import Analysis
+from .analysis import Analysis
 
 from .feasibility.tests import RTA
 
 from .partition.algorithms import ff
 
-from .priority.priority import task_sorting_operators
+from .priority import task_sorting_operators
