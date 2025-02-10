@@ -26,7 +26,7 @@ class TaskShufflerScheduler(Scheduler):
         task_sorting_operators[self.priority_policy](self.tasks)
         for i, task in enumerate(self.tasks):
             task.priority = i
-            if task.id == None:
+            if not hasattr(task, 'id'):
                 task.id = i
         
         # Only when tasks have been prioritized, we can calculate the maximum inversion budget

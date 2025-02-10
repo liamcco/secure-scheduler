@@ -5,51 +5,59 @@ from schedule_lib import TaskShufflerScheduler
 from schedule_lib import Analysis
 from schedule_lib.partition.algorithms import ff
 
-task1 = Task(5, 1)
-task2 = Task(8, 2)
-task3 = Task(20, 3)
+def main(x):
 
-tasks = [task1, task2, task3]
+    task1 = Task(5, 1)
+    task2 = Task(8, 2)
+    task3 = Task(20, 3)
 
-for i, task in enumerate(tasks):
-    task.id = i
+    tasks = [task1, task2, task3]
 
-if RTA(tasks, priority_policy="RM"): # Check if the taskset is feasible
-    print("Taskset is feasible")
-else:
-    print("WARNING: Taskset is not feasible")
+    for i, task in enumerate(tasks):
+        task.id = i
 
-TaskShufflerScheduler.priority_policy = "RM" # Set the priority policy to RRM
+    if RTA(tasks, priority_policy="RM"): # Check if the taskset is feasible
+        print("Taskset is feasible")
+    else:
+        print("WARNING: Taskset is not feasible")
 
-processor = Processor(1, scheduler=TaskShufflerScheduler) # 1 core
+    TaskShufflerScheduler.priority_policy = "RM" # Set the priority policy to RRM
 
-def custom_partition_algorithm(tasks, m):
-    return ff(tasks, m, task_order="RM", test=RTA, priority_policy="RM")
+    processor = Processor(1, scheduler=TaskShufflerScheduler) # 1 core
 
-processor.load_tasks(tasks, partition_algorithm=custom_partition_algorithm) # Load tasks into the processor
+    def custom_partition_algorithm(tasks, m):
+        return ff(tasks, m, task_order="RM", test=RTA, priority_policy="RM")
 
-success = processor.run(400_000) # Run the processor for 100 time units
+    processor.load_tasks(tasks, partition_algorithm=custom_partition_algorithm) # Load tasks into the processor
 
-if not success:
-    print("ABORTING: Deadline missed")
-    exit()
+    success = processor.run(400_000) # Run the processor for 100 time units
 
-analysis = Analysis(processor.simulation[0])
-totalEntropy = analysis.computeScheduleEntropy()
+    if not success:
+        print("ABORTING: Deadline missed")
+        exit()
 
-print("Slot\tPr0\tPr1\tPr2\tPr3\tTotalEntropy")
+    analysis = Analysis(processor.simulation[0])
+    totalEntropy = analysis.computeScheduleEntropy()
 
-for slot in range(5):
-    print(f"{slot}: ", end="\t")
-    slotData = analysis.simulation[slot]
-    probabilities = analysis.getSlotProbabilities(slotData)
+    print("Slot\tPr0\tPr1\tPr2\tPr3\tTotalEntropy")
 
-    for p in probabilities:
-        print(f"{p:.2f} ", end="\t")
+    for slot in range(5):
+        print(f"{slot}: ", end="\t")
+        slotData = analysis.simulation[slot]
+        probabilities = analysis.getSlotProbabilities(slotData)
 
-    slotEntropy = analysis.computeSlotEntropy(slotData)
+        for p in probabilities:
+            print(f"{p:.2f} ", end="\t")
 
-    print(f"{slotEntropy:.2f}")
+        slotEntropy = analysis.computeSlotEntropy(slotData)
 
-print("..."*20)
-print(f"Total\t\t\t\t\t\t{totalEntropy/analysis.hyperPeriod:.2f} entropy/slot")
+        print(f"{slotEntropy:.2f}")
+
+    print("..."*20)
+    print(f"Total\t\t\t\t\t\t{totalEntropy/analysis.hyperPeriod:.2f} entropy/slot")
+
+from multiprocessing import Pool
+
+if __name__ == '__main__':
+    with Pool(8) as p:
+        print(p.map(main, [1, 2, 3, 4, 5, 6, 7, 8]))
