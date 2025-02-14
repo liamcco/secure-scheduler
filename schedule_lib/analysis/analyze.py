@@ -22,12 +22,15 @@ class Analysis:
                     if task in task_cum_data:
                         task_cum_data[int(task)] += 1
                     else:
-                        task_cum_data[int(task)] = 1
+                        task_cum_data[int(task)] = 0
                 core_cum_data.append(task_cum_data)
             self.cumdata[core] = core_cum_data
 
     def flatten_simulation_data(self):
         return self.data.schedule.transpose(1, 0, 2).reshape(self.data.m, -1).T
+    
+    def get_schedule_of_core(self, core_id):
+        return self.flatten_simulation_data()[:, core_id]
     
     def computePosteriorEntropy(self, task_id, m=None):
         return self.computeAnteriorEntropy(task_id, m, posterior=True)

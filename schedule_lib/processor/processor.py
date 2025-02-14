@@ -38,6 +38,13 @@ class Processor:
     def get_all_tasks(self):
         return [task for core in self.cores for task in core.tasks]
     
+    def get_core_id_containing_task(self, task_id):
+        for core in self.cores:
+            for task in core.tasks:
+                if task.id == task_id:
+                    return core.core_id
+        return None
+    
     def run(self, time: int) -> bool:
 
         all_tasks = self.get_all_tasks()

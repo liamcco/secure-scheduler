@@ -2,7 +2,9 @@ import numpy as np
 
 class SimulationData:
     def __init__(self, m, hyperperiod, t):
-        self.schedule = np.zeros((t // hyperperiod + 1, m, hyperperiod), dtype=int)
+        if t // hyperperiod == 0:
+            t = hyperperiod
+        self.schedule = -np.ones((t // hyperperiod, m, hyperperiod), dtype=int)
         self.hyperperiod = hyperperiod
         self.m = m
 

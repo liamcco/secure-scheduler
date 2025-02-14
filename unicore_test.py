@@ -10,11 +10,8 @@ def main():
     task1 = Task(5, 1)
     task2 = Task(8, 2)
     task3 = Task(20, 3)
-    task4 = Task(5, 1)
-    task5 = Task(8, 2)
-    task6 = Task(20, 3)
 
-    tasks = [task1, task2, task3, task4, task5, task6] 
+    tasks = [task1, task2, task3] 
 
     for i, task in enumerate(tasks):
         task.id = i
@@ -24,7 +21,7 @@ def main():
         scheduler.priority_policy = "RM" # Set the priority policy to RRM
         return scheduler
 
-    processor = Processor(2, scheduler=custom_scheduler) # 2 core
+    processor = Processor(1, scheduler=custom_scheduler) # 2 core
 
     def custom_partition_algorithm(tasks, m):
         return ff(tasks, m, task_order="RM", test=RTA, priority_policy="RM")
@@ -71,11 +68,7 @@ def main():
         print(f"{slotEntropy:.2f}")
 
     print("..."*20)
-    print(f"Total\t\t\t\t\t\t{analysis.computeCoreScheduleEntropy(0):.2f} entropy/slot")
+    print(f"Total\t\t\t\t\t\t{analysis.computeCoreScheduleEntropy(0)/analysis.hyperperiod:.2f} entropy/slot")
 
 if __name__ == '__main__':
-    from schedule_lib.taskset.taskset import TaskSet
-    x = TaskSet.randfixedsum(10, 3)
-    print(sum(x))
-    exit()
     main()

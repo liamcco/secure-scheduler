@@ -23,7 +23,7 @@ class TaskSet:
         utils.append(sumU)  # Last task gets remaining utilization
         return utils
 
-    def generate_task_set(n, U=0.5, hyper_period=3000):
+    def generate_task_set(n, U=0.5, hyper_period=3000, execution_time_range=(1, 50)):
         """Generates a task set with a given:
         - number of tasks, n
         - total utilization, U
@@ -41,14 +41,14 @@ class TaskSet:
         task_set = []
         
         for util in utils:
-            # Randomly choose a period from valid periods
-            period = random.choice(valid_periods)
+            # Randomly choose the execution time
+            execution_time = random.randint(*execution_time_range)
             
             # Calculate the required period to satisfy U = C / T => T = C / U
-            execution_time = round(period * util)
+            period = round(execution_time / util)
             
             # Find the closest valid period (must be a divisor of period_limit)
-            # period = min(valid_periods, key=lambda p: abs(p - period))
+            period = min(valid_periods, key=lambda p: abs(p - period))
             
             task_set.append(JitterTask(period,execution_time))
         
