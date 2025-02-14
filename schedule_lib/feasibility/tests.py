@@ -21,8 +21,7 @@ def RTA(tasks, priority_policy="RM") -> bool:
     for task in tasks:
         try:
             response_time(task, approved_tasks)
-        except UnfeasibleTaskset as e:
-            print(e)
+        except UnfeasibleTaskset:
             return False
 
         approved_tasks.append(task)

@@ -1,7 +1,10 @@
 # secure-scheduler
 Main repo for source code to "Security-Aware Scheduling of Real-Time Tasks on Multiprocessors"
 
-# install library
-*python3 setup.py bdist_wheel*
+## Simulations
+- taskshuffler.py - recreates the results from the paper
+- unicore_test.py - tests the unicore scheduler
+- multicore_test.py - tests the multicore scheduler
 
-*./dist/schedule_lib-0.1.0-py3-none-any.whl*
+## Results
+- taskshuffler_results.py - generates plots from the results of taskshuffler.py

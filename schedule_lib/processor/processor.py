@@ -5,6 +5,7 @@ from schedule_lib.partition.algorithms import ff
 from schedule_lib.task.utils import calculate_hyperperiod
 from schedule_lib.scheduler.basicscheduler import Scheduler
 from schedule_lib.task.taskerror import DeadlineMissed, ExecutingFinishedTask
+from schedule_lib.analysis.simulation import SimulationData
 
 class Processor:
     def __init__(self, m: int, scheduler=Scheduler) -> None:
@@ -37,14 +38,20 @@ class Processor:
     def get_all_tasks(self):
         return [task for core in self.cores for task in core.tasks]
     
+    def get_core_id_containing_task(self, task_id):
+        for core in self.cores:
+            for task in core.tasks:
+                if task.id == task_id:
+                    return core.core_id
+        return None
+    
     def run(self, time: int) -> bool:
 
         all_tasks = self.get_all_tasks()
         hyperperiod = calculate_hyperperiod(all_tasks)
-        num_of_tasks = len(all_tasks)
         num_of_cores = len(self.cores)
 
-        self.simulation = np.zeros((num_of_cores, hyperperiod, num_of_tasks+1))
+        self.simulation = SimulationData(num_of_cores, hyperperiod, time)
 
         #print("| t\t| " + f" | ".join([f"Core{core.core_id}" for core in self.cores]) + " |")
 
@@ -64,7 +71,7 @@ class Processor:
                 return False
 
             # Statistics
-            self.log_task_execution(tasks_to_execute, t % hyperperiod)
+            self.simulation.log_task_execution(tasks_to_execute, t)
             #print(f"| {t}\t| " + f" | ".join([f"  {task.id}  " for task in tasks_to_execute.values()]) + " |")
 
         return True

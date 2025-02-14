@@ -1,18 +1,25 @@
-from schedule_lib.priority.priority import task_sorting_operators
+from schedule_lib.feasibility.tests import response_time
+from schedule_lib.feasibility.tests import UnfeasibleTaskset
 
-def OPA(tasks, task_order="RM") -> list:
+def OPA(tasks) -> list:
     """Orders task set according to priority policy
     tasks: list of Task objects
-    task_order: string,
-    return list of Task objects
+    return ordered list of Task objects
     """
     prioritzed_tasks = []
-    #task_sorting_operators[task_order](tasks)
+    tasks = tasks[:]
 
     for _ in range(len(tasks)):
-        candidates = []
-        for task in tasks:
-            if task.is_ready():
-                candidates.append(task)
+        for task_to_try in tasks:
+            # Create task set
+            set_to_test = tasks[:]
+            set_to_test.remove(task_to_try)
+            try:
+                response_time(set_to_test[task_to_try])
+            except UnfeasibleTaskset:
+                continue
+            prioritzed_tasks.append(task_to_try)
+            tasks.remove(task_to_try)
+            break
 
     return prioritzed_tasks.reverse()

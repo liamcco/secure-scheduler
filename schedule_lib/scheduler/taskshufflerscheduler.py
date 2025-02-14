@@ -36,7 +36,7 @@ class TaskShufflerScheduler(Scheduler):
         
         # Add idle task
         self.idle_task.priority = math.inf
-        self.idle_task.id = len(self.tasks)
+        self.idle_task.id = -1
         self.idle_task.maximum_inversion_budget = math.inf
         self.idle_task.remaining_inversion_budget = math.inf
     
