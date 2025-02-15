@@ -27,7 +27,7 @@ def RTA(tasks, priority_policy="RM") -> bool:
         approved_tasks.append(task)
     return True
 
-def response_time(task, task_set) -> bool:
+def response_time(task, task_set, include_jitter=True) -> bool:
     """Calculates response time of task in task_set
     task: Task object
     task_set: hp(task)
@@ -36,7 +36,7 @@ def response_time(task, task_set) -> bool:
     wcrt_guess = task.duration
     while True:
         wcrt = wcrt_guess
-        wcrt_guess = task.duration + sum([math.ceil(wcrt/t.period)*t.duration for t in task_set])
+        wcrt_guess = task.duration + sum([math.ceil((wcrt+t.max_jitter)/t.period)*t.duration for t in task_set])
 
         if (wcrt_guess>task.deadline):
             raise UnfeasibleTaskset(f"{task} will miss deadline")

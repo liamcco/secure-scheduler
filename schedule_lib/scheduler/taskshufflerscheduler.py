@@ -96,7 +96,8 @@ class TaskShufflerScheduler(Scheduler):
     def task_arrived(self, task) -> None:
         self.toSchedule = 0
         task.remaining_inversion_budget = task.maximum_inversion_budget
-        task.remaining_inversion_budget -= task.remaining_jitter
+        jitter_experienced = task.deadline - task.remaining_deadline
+        task.remaining_inversion_budget -= jitter_experienced
     
     def task_completed(self, task) -> None:
         self.toSchedule = 0
