@@ -13,14 +13,14 @@ periods = get_divisors(hyperperiod)
 
 numOfTasks = [5, 7, 9, 11, 13, 15]
 
-utilgroups = [(0.02+0.1*i, 0.08+0.1*i) for i in range(10)]
+utilgroups = [(0.02+0.1*i, 0.08+0.1*i) for i in range(9)]
 
 def create_taskset(U, n):
     while True:
         # Generate taskset with n tasks, pick util random from interval U
 
         U_aim = random.uniform(U[0], U[1])
-        taskset = TaskSet.generate_task_set(n, U_aim, jitter_amount=0.1)
+        taskset = TaskSet.generate_task_set(n, U_aim)
         totalU = sum([task.duration/task.period for task in taskset])
         if U[0] <= totalU <= U[1]:
             if totalU <= rm_util_bound(n) or RTA(taskset, priority_policy="RM"):
