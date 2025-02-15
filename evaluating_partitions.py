@@ -42,7 +42,7 @@ def sub_main():
         except PartitionError:
             pass
 
-    success = processor.run(3_000*500)
+    success = processor.run(3_000*1000)
     
     if not success:
         return False
@@ -63,7 +63,7 @@ def main():
     print(f"Using {num_workers} workers")
 
     with multiprocessing.Pool(processes=num_workers) as pool:
-        for i in range(250):
+        for i in range(50):
             processes.append(pool.apply_async(sub_main))
 
         pool.close()  # Prevent new tasks from being submitted
