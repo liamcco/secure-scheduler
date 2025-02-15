@@ -22,7 +22,7 @@ class Analysis:
                     if task in task_cum_data:
                         task_cum_data[int(task)] += 1
                     else:
-                        task_cum_data[int(task)] = 0
+                        task_cum_data[int(task)] = 1
                 core_cum_data.append(task_cum_data)
             self.cumdata[core] = core_cum_data
 
@@ -109,6 +109,8 @@ class Analysis:
     
     def getSlotProbabilities(self, slot, include_idle=True):
         total = sum(slot.values())
+        if total == 0:
+            print(slot)
         probabilities = [slot[task_id]/total if (task_id in slot) else 0 for task_id in range(self.num_of_tasks)] + [slot[-1]/total if (-1 in slot) else 0] if include_idle else []
 
         return probabilities

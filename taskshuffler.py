@@ -1,4 +1,5 @@
 import random
+import multiprocessing
 
 from schedule_lib.taskset.taskset import TaskSet
 from schedule_lib.taskset.utils import get_divisors
@@ -29,7 +30,7 @@ def simulate(taskset):
     processor = Processor(1, scheduler=TaskShufflerScheduler)
     processor.load_tasks(taskset)
 
-    success = processor.run(3_000*1000)
+    success = processor.run(3_000*10)
     
     if not success:
         return False
@@ -41,20 +42,28 @@ def simulate(taskset):
     n = len(taskset)
 
     print(f"{U:.2f},{totalEntropy:.2f},{n}")
-    return f"{U:.2f},{totalEntropy:.2f},{n}\n"
+    return True
+
+def sub_main(U, n):
+    for _ in range(5):
+        # Create taskset
+        taskset = create_taskset(U, n)
+
+        # Simulate taskset
+        simulate(taskset)
 
 def main():
-    for U in utilgroups:
-        for n in numOfTasks:
-            for j in range(5):
-                # Create taskset
-                taskset = create_taskset(U, n)
+    processes = []
+    num_workers = multiprocessing.cpu_count()  # Use all CPU cores
+    print(f"Using {num_workers} workers")
 
-                # Simulate taskset
-                result = simulate(taskset)
+    with multiprocessing.Pool(processes=num_workers) as pool:
+        for U in utilgroups:
+            for n in numOfTasks:
+                processes.append(pool.apply_async(sub_main, (U, n)))
 
-                with open("results.txt", "a") as f:
-                    f.write(result)
+        pool.close()  # Prevent new tasks from being submitted
+        pool.join()
 
 if __name__ == '__main__':
     main()
