@@ -30,7 +30,7 @@ def simulate(taskset):
     processor = Processor(1, scheduler=TaskShufflerScheduler)
     processor.load_tasks(taskset)
 
-    success = processor.run(3_000*1000)
+    success = processor.run(3_000*10)
     
     if not success:
         return False

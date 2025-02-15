@@ -3,7 +3,7 @@ import numpy as np
 
 # Read data from results.txt
 # UTILIZATION,ENTROPY,NUM_OF_TASKS
-data = np.genfromtxt("results.txt", delimiter=",", skip_header=1)
+data = np.genfromtxt("results_jitter.txt", delimiter=",", skip_header=1)
 
 # Create a scatter plot
 plt.scatter(data[:, 0], data[:, 1], c=data[:, 2], cmap='viridis')

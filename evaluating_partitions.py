@@ -7,30 +7,42 @@ from schedule_lib.feasibility.tests import RTA, rm_util_bound
 from schedule_lib.processor import Processor
 from schedule_lib.scheduler import TaskShufflerScheduler
 from schedule_lib.analysis import Analysis
+from schedule_lib.partition.algorithms import PartitionError
 
 hyperperiod = 3000
 periods = get_divisors(hyperperiod)
 
-numOfTasks = [5, 7, 9, 11, 13, 15]
+numOfTasksPerCore = [5, 7, 9, 11, 13, 15]
 
-utilgroups = [(0.02+0.1*i, 0.08+0.1*i) for i in range(9)]
+utilgroupsPerCore = [(0.02+0.1*i, 0.08+0.1*i) for i in range(9)]
 
-def create_taskset(U, n):
+numOfCores = [2, 4, 8, 16]
+
+def create_taskset(m):
+    n = random.choice(numOfTasksPerCore)
+    U = random.choice(utilgroupsPerCore)
+
+    U_aim_core = random.uniform(U[0], U[1])
+    U_aim = U_aim_core * m
+
     while True:
-        # Generate taskset with n tasks, pick util random from interval U
-
-        U_aim = random.uniform(U[0], U[1])
-        taskset = TaskSet.generate_task_set(n, U_aim)
+        taskset = TaskSet.generate_task_set(n*m, U_aim)
         totalU = sum([task.duration/task.period for task in taskset])
-        if U[0] <= totalU <= U[1]:
-            if totalU <= rm_util_bound(n) or RTA(taskset, priority_policy="RM"):
-                return taskset
+        if U[0] <= totalU/m <= U[1]:
+            return taskset
 
-def simulate(taskset):
-    processor = Processor(1, scheduler=TaskShufflerScheduler)
-    processor.load_tasks(taskset)
+def sub_main():
+    while True:
+        try:
+            m = random.choice(numOfCores)
+            taskset = create_taskset(m)
+            processor = Processor(m, scheduler=TaskShufflerScheduler)
+            processor.load_tasks(taskset)
+            break
+        except PartitionError:
+            pass
 
-    success = processor.run(3_000*1000)
+    success = processor.run(3_000*500)
     
     if not success:
         return False
@@ -40,17 +52,10 @@ def simulate(taskset):
 
     U = sum([task.duration/task.period for task in taskset])
     n = len(taskset)
+    m = len(processor.cores)
 
-    print(f"{U:.2f},{totalEntropy:.2f},{n}")
+    print(f"{U:.2f},{totalEntropy:.2f},{n},{m}")
     return True
-
-def sub_main(U, n):
-    for _ in range(10):
-        # Create taskset
-        taskset = create_taskset(U, n)
-
-        # Simulate taskset
-        simulate(taskset)
 
 def main():
     processes = []
@@ -58,9 +63,8 @@ def main():
     print(f"Using {num_workers} workers")
 
     with multiprocessing.Pool(processes=num_workers) as pool:
-        for U in utilgroups:
-            for n in numOfTasks:
-                processes.append(pool.apply_async(sub_main, (U, n)))
+        for i in range(250):
+            processes.append(pool.apply_async(sub_main))
 
         pool.close()  # Prevent new tasks from being submitted
         pool.join()

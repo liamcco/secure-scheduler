@@ -1,7 +1,7 @@
 import numpy as np
 
 from schedule_lib.processor.core import Core
-from schedule_lib.partition.algorithms import ff
+from schedule_lib.partition.algorithms import nf
 from schedule_lib.task.utils import calculate_hyperperiod
 from schedule_lib.scheduler.basicscheduler import Scheduler
 from schedule_lib.task.taskerror import DeadlineMissed, ExecutingFinishedTask
@@ -19,7 +19,7 @@ class Processor:
         for core in self.cores:
             core.increment_time_step()
 
-    def load_tasks(self, tasks, partition_algorithm=ff) -> None:
+    def load_tasks(self, tasks, partition_algorithm=nf) -> None:
         """tasks: list of Task objects
         partition_algorithm: function that partitions the tasks among the cores
                             ([tasks], m) -> {id:[tasks]}

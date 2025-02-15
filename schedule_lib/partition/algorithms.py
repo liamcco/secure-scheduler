@@ -3,9 +3,12 @@ import random
 from schedule_lib.feasibility.tests import RTA
 from schedule_lib.priority.priority import task_sorting_operators
 
+class PartitionError(Exception):
+    pass
+
 def check_partition(cores, tasks):
     if sum([len(core) for core in cores.values()]) != len(tasks):
-        raise Exception("Partitioning failed")
+        raise PartitionError("Partitioning failed")
 
 
 def ff(tasks, m, task_order="RM", test=RTA, priority_policy="RM") -> dict:
