@@ -57,9 +57,6 @@ def main():
     num_workers = multiprocessing.cpu_count()  # Use all CPU cores
     print(f"Using {num_workers} workers")
 
-    sub_main(utilgroups[0], numOfTasks[0])
-    input()
-
     with multiprocessing.Pool(processes=num_workers) as pool:
         for U in utilgroups:
             for n in numOfTasks:
