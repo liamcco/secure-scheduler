@@ -11,6 +11,7 @@ class Processor:
     def __init__(self, m: int, scheduler=Scheduler) -> None:
         self.tasks = {core_id:[] for core_id in range(m)}
         self.cores = [Core(core_id=core_id, tasks=tasks, scheduler=scheduler) for (core_id, tasks) in self.tasks.items()]
+        self.all_tasks = [task for core in self.cores for task in core.tasks]
         
     def schedule_tasks(self) -> dict:
         return {core.core_id:core.schedule_task() for core in self.cores}
@@ -30,13 +31,8 @@ class Processor:
         for (core_id, taskset) in partitioned_tasks.items():
             self.tasks[core_id] += taskset
             self.cores[core_id].prioritize()
-
-    def log_task_execution(self, tasks, time) -> None:
-        for core, task in tasks.items():
-            self.simulation[core][time][task.id] += 1
-
-    def get_all_tasks(self):
-        return [task for core in self.cores for task in core.tasks]
+        
+        self.all_tasks = [task for core in self.cores for task in core.tasks]
     
     def get_core_id_containing_task(self, task_id):
         for core in self.cores:
@@ -47,18 +43,32 @@ class Processor:
     
     def run(self, time: int) -> bool:
 
-        all_tasks = self.get_all_tasks()
-        hyperperiod = calculate_hyperperiod(all_tasks)
+        hyperperiod = calculate_hyperperiod(self.all_tasks)
         num_of_cores = len(self.cores)
 
         self.simulation = SimulationData(num_of_cores, hyperperiod, time)
 
-        #print("| t\t| " + f" | ".join([f"Core{core.core_id}" for core in self.cores]) + " |")
+        self.attack_data = {task_a.id: {"anterior": {task.id:0 for task in self.all_tasks if task.id != task_a.id}, 
+                                      "posterior": {task.id:0 for task in self.all_tasks if task.id != task_a.id},
+                                      "pincher": {task.id:0 for task in self.all_tasks if task.id != task_a.id},
+                                      "current_anteriors": {}, 
+                                      "current_posteriors": {}} for task_a in self.all_tasks}
 
-        for t in range(time):
+        for t in range(time // hyperperiod * hyperperiod):
             
             # Pick a task to execute
             tasks_to_execute = self.schedule_tasks()
+
+            # Store Schedule
+            self.simulation.log_task_execution(tasks_to_execute, t)
+
+            tasks_to_execute = [task for task in tasks_to_execute.values() if task.id != -1]
+
+            # Easiest to check posterior before execution
+            for executed_task in tasks_to_execute:
+                # Update the current posteriors
+                for new_task in [task for task in self.all_tasks if task.is_complete()]:
+                    self.attack_data[new_task.id]["current_posteriors"][executed_task.id] = 1
             
             # Executes task and increments time step
             try:
@@ -69,9 +79,27 @@ class Processor:
             except ExecutingFinishedTask as e:
                 print(e.message)
                 return False
-
+        
             # Statistics
-            self.simulation.log_task_execution(tasks_to_execute, t)
-            #print(f"| {t}\t| " + f" | ".join([f"  {task.id}  " for task in tasks_to_execute.values()]) + " |")
+            for task in self.all_tasks:
+                # Will not happen in the first time step
+                if task.is_new():
+                    # Summarize the current anteriors
+                    for anterior_task in self.attack_data[task.id]["current_anteriors"]:
+                        self.attack_data[task.id]["anterior"][anterior_task] += 1
 
+                    for posterior_task in self.attack_data[task.id]["current_posteriors"]:
+                        self.attack_data[task.id]["posterior"][posterior_task] += 1
+                        if posterior_task in self.attack_data[task.id]["current_anteriors"]:
+                            self.attack_data[task.id]["pincher"][posterior_task] += 1
+
+                    # reset lists
+                    self.attack_data[task.id]["current_anteriors"] = {}
+                    self.attack_data[task.id]["current_posteriors"] = {}
+
+            for executed_task in tasks_to_execute:
+                # Update the current anteriors
+                for fresh_task in [task for task in self.all_tasks if task.is_fresh() and task.id != executed_task.id]:
+                    self.attack_data[fresh_task.id]["current_anteriors"][executed_task.id] = 1
+            
         return True

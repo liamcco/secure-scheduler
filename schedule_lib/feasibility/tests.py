@@ -27,7 +27,7 @@ def RTA(tasks, priority_policy="RM") -> bool:
         approved_tasks.append(task)
     return True
 
-def response_time(task, task_set, include_jitter=True) -> bool:
+def response_time(task, task_set) -> bool:
     """Calculates response time of task in task_set
     task: Task object
     task_set: hp(task)
@@ -45,3 +45,4 @@ def response_time(task, task_set, include_jitter=True) -> bool:
             break
 
     return wcrt
+

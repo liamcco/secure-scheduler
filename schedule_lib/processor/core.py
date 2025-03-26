@@ -19,7 +19,7 @@ class Core:
         selected_task = self.scheduler.schedule_task()
         self.task_to_execute = selected_task if selected_task else self.idle_task
         
-        return selected_task
+        return self.task_to_execute
     
     def execute_task(self) -> None:
         did_complete = self.task_to_execute.execute()

@@ -1,12 +1,11 @@
 import math
-import numpy as np
 from functools import reduce
 from operator import mul
 
 class Analysis:
     def __init__(self, processor) -> None:
         self.data = processor.simulation
-        self.num_of_tasks = len(processor.get_all_tasks())
+        self.num_of_tasks = len(processor.all_tasks)
         self.hyperperiod = self.data.hyperperiod
         self.num_of_cores = self.data.m
         self.cumdata = {}
@@ -32,68 +31,13 @@ class Analysis:
     def get_schedule_of_core(self, core_id):
         return self.flatten_simulation_data()[:, core_id]
     
-    def computePosteriorEntropy(self, task_id, m=None):
-        return self.computeAnteriorEntropy(task_id, m, posterior=True)
-    
-    def computeAnteriorEntropy(self, task_id, m=None, posterior=False, get_data=False):
-        data_to_search = self.flatten_simulation_data()
-        if m is not None:
-            data_to_search = data_to_search[:][m:m+1]
-        if posterior:
-            data_to_search = data_to_search[::-1]
-        anterior_data = {}
-
-        for t, slot in enumerate(data_to_search):
-            if task_id in slot:
-                for preceding_task in data_to_search[t-1]:
-                    if preceding_task != task_id:
-                        if preceding_task in anterior_data:
-                            anterior_data[preceding_task] += 1
-                        else:
-                            anterior_data[int(preceding_task)] = 1
-
-        return self.computeSlotEntropy(anterior_data) if not get_data else anterior_data
-    
-    def computePincherEntropy(self, task_id, m=None, get_data=False):
-        data_to_search = self.flatten_simulation_data()
-        if m is not None:
-            data_to_search = data_to_search[:][m:m+1]
-        pincher_data = {}
-
-        start_search_index = 0
-        if task_id in data_to_search[0]:
-            for t, slot in enumerate(data_to_search[1:]):
-                if task_id not in slot:
-                    start_search_index = t+1
-                    break
-
-        current_potential_pinchers = None
-
-        for t, slot in enumerate(data_to_search[start_search_index+1:]):
-
-            if task_id in slot and current_potential_pinchers is None:
-                current_slot = data_to_search[t-1]
-                current_potential_pinchers = current_slot[current_slot != -1]
-                continue
-
-            if task_id not in slot and current_potential_pinchers is not None:
-                for preceding_task in slot:
-                    if preceding_task in current_potential_pinchers:
-                        if preceding_task in pincher_data:
-                            pincher_data[preceding_task] += 1
-                        else:
-                            pincher_data[int(preceding_task)] = 1
-                current_potential_pinchers = None
-
-        return self.computeSlotEntropy(pincher_data) if not get_data else pincher_data
-
-    
     def computeMultiCoreScheduleEntropy(self) -> float:
         if not self.cumdata:
             self.create_cumulative_data()
 
         data = [self.computeCoreScheduleEntropy(m) for m in range(self.data.m)]
-        return self.geometric_mean(data)
+        active_processors = [coreEntropy for coreEntropy in data if coreEntropy != 0]
+        return self.geometric_mean(active_processors) if active_processors else 0
     
     def geometric_mean(self, data) -> float:
         return reduce(mul, data, 1) ** (1/len(data))
@@ -110,7 +54,7 @@ class Analysis:
     def getSlotProbabilities(self, slot, include_idle=True):
         total = sum(slot.values())
         if total == 0:
-            print(slot)
-        probabilities = [slot[task_id]/total if (task_id in slot) else 0 for task_id in range(self.num_of_tasks)] + [slot[-1]/total if (-1 in slot) else 0] if include_idle else []
+            return []
+        probabilities = [slot[task_id]/total if (task_id in slot) else 0 for task_id in range(self.num_of_tasks)] + ( [slot[-1]/total if (-1 in slot) else 0] if include_idle else [] )
 
         return probabilities

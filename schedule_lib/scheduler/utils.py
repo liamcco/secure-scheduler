@@ -5,12 +5,22 @@ def hp_i_of_tasks(task_i, tasks):
     """Filters `tasks` to return a list of tasks with priority higher than `task_i`
     --> Requires that all tasks has a priority attribute <--
     """
+    # find index of task_i
+    if task_i not in tasks:
+        return tasks
+    index = tasks.index(task_i)
+    return tasks[:index]
     return [task for task in tasks if task.priority < task_i.priority]
 
 def lp_i_of_tasks(task_i, tasks):
     """Filters `tasks` to return a list of tasks with priority less than `task_i`
     --> Requires that all tasks has a priority attribute <-- 
     """
+    # find index of task_i
+    if task_i not in tasks:
+        return tasks
+    index = tasks.index(task_i)
+    return tasks[index+1:]
     return [task for task in tasks if task.priority > task_i.priority]
 
 def upper_bound_interference_from_hp(task_i, tasks) -> int:
@@ -25,7 +35,12 @@ def worst_case_maximum_inversion_budget(task_i, tasks) -> int:
 def minimum_inversion_priority(task_i, tasks) -> int:
     """Calculates the minimum inversion priority of `task_i`"""
     lp_i = lp_i_of_tasks(task_i, tasks)
-    considered_tasks = [task for task in lp_i if worst_case_maximum_inversion_budget(task, tasks) < 0]
+    for task in lp_i:
+        if task.maximum_inversion_budget < 0:
+            return task.priority
+    return math.inf
+
+    considered_tasks = [task for task in lp_i if task.maximum_inversion_budget < 0]
     if len(considered_tasks) == 0:
         return math.inf # Arbitrarily low priority
     else:

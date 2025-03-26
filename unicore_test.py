@@ -28,7 +28,7 @@ def main():
 
     processor.load_tasks(tasks, partition_algorithm=custom_partition_algorithm) # Load tasks into the processor
 
-    success = processor.run(40_000) # Run the processor for 80 time units
+    success = processor.run(10000*3000) # Run the processor for 40_000 time units
 
     if not success:
         print("ABORTING: Deadline missed")
@@ -45,14 +45,6 @@ def main():
     totalMultiCoreEntropy = analysis.computeMultiCoreScheduleEntropy()
     print(f"Total multi-core entropy: {totalMultiCoreEntropy:.2f}")
 
-    anteriorEntropies = [analysis.computeAnteriorEntropy(task_id) for task_id in range(analysis.num_of_tasks)]
-    totalAnteriorEntropy = analysis.geometric_mean(anteriorEntropies)
-    print(f"Total anterior entropy: {totalAnteriorEntropy:.2f}")
-
-    pincherEntropies = [analysis.computePincherEntropy(task_id) for task_id in range(analysis.num_of_tasks)]
-    totalPincherEntropy = analysis.geometric_mean(pincherEntropies)
-    print(f"Total pincher entropy: {totalPincherEntropy:.2f}")
-
     print("Slot\tPr0\tPr1\tPr2\tPr3\tTotalEntropy")
 
     for slot in range(5):
@@ -68,7 +60,19 @@ def main():
         print(f"{slotEntropy:.2f}")
 
     print("..."*20)
-    print(f"Total\t\t\t\t\t\t{analysis.computeCoreScheduleEntropy(0)/analysis.hyperperiod:.2f} entropy/slot")
+    print(f"Total\t\t\t\t\t{analysis.computeCoreScheduleEntropy(0)/analysis.hyperperiod:.2f} entropy/slot")
+    print()
+
+    attack_data = processor.attack_data
+
+    posterior_entropy = analysis.computeSlotEntropy(attack_data[0]["posterior"])
+    print(f"Entropy of the task {posterior_entropy:.2f}")
+
+    anterior_entropy = analysis.computeSlotEntropy(attack_data[0]["anterior"])
+    print(f"Entropy of the task {anterior_entropy:.2f}")
+
+    pincher_entropy = analysis.computeSlotEntropy(attack_data[0]["pincher"])
+    print(f"Entropy of the task {pincher_entropy:.2f}")
 
 if __name__ == '__main__':
     main()

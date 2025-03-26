@@ -3,7 +3,7 @@ import random
 from schedule_lib.task.basictask import Task
 
 class JitterTask(Task):
-    def __init__(self, period: int, duration: int, deadline:int=None, jitter_amount:int=0) -> None:   
+    def __init__(self, period: int, duration: int, deadline:int=None, jitter_amount:float=0) -> None:   
         self.max_jitter = int(period * jitter_amount)
         self.remaining_jitter = 0
         super().__init__(period, duration, deadline)

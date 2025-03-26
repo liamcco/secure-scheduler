@@ -40,6 +40,15 @@ class Task:
     def is_ready(self) -> bool:
         return self.remaining_execution_time > 0
     
+    def is_fresh(self) -> bool:
+        return self.duration == self.remaining_execution_time
+    
+    def is_complete(self) -> bool:
+        return self.remaining_execution_time == 0
+    
+    def is_new(self) -> bool:
+        return self.time_until_next_period == self.period
+    
     def __str__(self) -> str:
         info = "Task {\n" \
         + f"\tperiod={self.period},\n" \
